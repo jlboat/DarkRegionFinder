@@ -2,6 +2,8 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'jacoco'
 
+mainClassName = "drf.DarkRegionFinderEngine"
+
 repositories {
     mavenCentral()
 }
