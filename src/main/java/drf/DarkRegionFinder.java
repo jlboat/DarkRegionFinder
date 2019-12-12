@@ -1,12 +1,13 @@
 /**
  * 
  */
-package ebbert.cgf;
+package drf;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.NullPointerException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,7 +45,7 @@ public class DarkRegionFinder {
 	private SAMFileHeader header;
 	private SamReader reader;
 	
-	private IndexedFastaSequenceFile hgRefReader;
+	private IndexedFastaSequenceFile refReader;
 
     /**
      *
@@ -52,7 +53,7 @@ public class DarkRegionFinder {
      * @param outDepthBed
      * @param outMapQBed
      * @param outIncBed
-     * @param hgRef
+     * @param ref
      * @param mapQThreshold
      * @param minMapQMass
      * @param minRegionSize
@@ -61,7 +62,7 @@ public class DarkRegionFinder {
      * @throws IOException
      */
 	public DarkRegionFinder(final File samFile, final File outDepthBed,
-                        File outMapQBed, File outIncBed, File hgRef,
+                        File outMapQBed, File outIncBed, File ref,
                         final int mapQThreshold, final int minMapQMass, final int minRegionSize,
                         int minDepth, final boolean exclusiveRegions, final ValidationStringency vs
                     /*, int startWalking, int endWalking*/) throws IOException {
@@ -89,7 +90,7 @@ public class DarkRegionFinder {
 		DarkRegionFinder.EXCLUSIVE_REGIONS = exclusiveRegions;
 		DarkRegionFinder.SAM_VALIDATION_STRINGENCY = vs;
 		
-		this.hgRefReader = new IndexedFastaSequenceFile(hgRef);
+		this.refReader = new IndexedFastaSequenceFile(ref);
 
 		this.reader = DarkRegionFinder.openSam(samFile,
 				DarkRegionFinder.SAM_VALIDATION_STRINGENCY);
@@ -166,16 +167,23 @@ public class DarkRegionFinder {
 			pos = locus.getPosition();  
 			
 			/* Ensure sequence is present in provided reference */
-			if(hgRefReader.getSequenceDictionary().getSequence(contig) == null){
-				logger.warn("BAM file contains alignments for " + contig
-						+ " but this sequence was not found in the provided"
-						+ " reference. Skipping.");
-				ignore.add(contig);
-				continue;
-			}
+			try {
+                if(refReader.getSequenceDictionary().getSequence(contig) == null){
+				    logger.warn("BAM file contains alignments for " + contig
+				    		+ " but this sequence was not found in the provided"
+				    		+ " reference. Skipping.");
+				    ignore.add(contig);
+				    continue;
+			    }
+            }
+            catch (NullPointerException e) {
+                logger.error("Fasta sequence dictionary not found " 
+                        + "and is required.");
+                System.exit(1);
+            }
 
 			/* Expects 1-based position (inclusive to inclusive) */
-			bases = hgRefReader.getSubsequenceAt(contig, pos, pos).getBases();
+			bases = refReader.getSubsequenceAt(contig, pos, pos).getBases();
 
 			/* Track progress */ 
         	if(pos % 1000000 == 0){

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ebbert.cgf;
+package drf;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -146,11 +146,11 @@ public class DarkRegionFinderEngine {
 				.help("The input file. This can be a SAM or BAM file.");
 		
 		ioOptions
-				.addArgument("-g", "--human-ref")
-				.dest("HG_REF")
+				.addArgument("-g", "--ref-genome")
+				.dest("REF")
 				.type(String.class)
 				.required(true)
-				.help("The human genome reference file. Must also be indexed "
+				.help("The genome reference file. Must also be indexed "
 						+ "by 'samtools faidx' and have a Picard sequence"
 						+ " dictionary.");
 
@@ -198,7 +198,7 @@ public class DarkRegionFinderEngine {
 		String lowDepthBed = parsedArgs.getString("LOW_COV_BED");
 		String lowMapQBed = parsedArgs.getString("LOW_MAPQ_BED");
 		String incBed = parsedArgs.getString("INC_BED");
-		String hgRef = parsedArgs.getString("HG_REF");
+		String ref = parsedArgs.getString("REF");
 
 		int minMapQMass = parsedArgs.getInt("MIN_MAPQ_MASS");
 		int minRegionSize = parsedArgs.getInt("MIN_SIZE");
@@ -223,7 +223,7 @@ public class DarkRegionFinderEngine {
 			// Do your thing.
 			DarkRegionFinder cgf = new DarkRegionFinder(new File(sam),
 					new File(lowDepthBed), new File(lowMapQBed), new File(incBed),
-					new File(hgRef), mapQThresh, minMapQMass, minRegionSize, minDepth,
+					new File(ref), mapQThresh, minMapQMass, minRegionSize, minDepth,
                     exclusive, vs);
 
 			cgf.startWalkingByLocus();
